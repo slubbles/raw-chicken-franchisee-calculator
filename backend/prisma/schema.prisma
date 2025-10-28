@@ -1,0 +1,109 @@
+// Prisma Schema - Database Blueprint
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// ============================================
+// TABLE 1: BUDGETS
+// Tracks weekly/monthly budget allocations
+// ============================================
+model Budget {
+  id         Int      @id @default(autoincrement())
+  startDate  DateTime @map("start_date")
+  amount     Float
+  status     String   @default("active")
+  notes      String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  
+  // Relationships
+  orders     Order[]
+  
+  @@map("budgets")
+}
+
+// ============================================
+// TABLE 2: ORDERS
+// Daily chicken deliveries
+// ============================================
+model Order {
+  id         Int      @id @default(autoincrement())
+  budgetId   Int      @map("budget_id")
+  date       DateTime
+  pieces     Int
+  chopCount  Int      @map("chop_count")
+  buoCount   Int      @map("buo_count")
+  totalKg    Float?   @map("total_kg")
+  createdAt  DateTime @default(now()) @map("created_at")
+  
+  // Relationships
+  budget     Budget      @relation(fields: [budgetId], references: [id])
+  bags       BagWeight[]
+  cost       Cost?
+  
+  @@map("orders")
+}
+
+// ============================================
+// TABLE 3: BAG WEIGHTS
+// Individual bag measurements per order
+// ============================================
+model BagWeight {
+  id        Int      @id @default(autoincrement())
+  orderId   Int      @map("order_id")
+  weightKg  Float    @map("weight_kg")
+  bagType   String?  @map("bag_type")
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  // Relationships
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  @@map("bag_weights")
+}
+
+// ============================================
+// TABLE 4: COSTS
+// Calculated costs per order (historical pricing)
+// ============================================
+model Cost {
+  id              Int      @id @default(autoincrement())
+  orderId         Int      @unique @map("order_id")
+  pricePerKg      Float    @map("price_per_kg")
+  chickenCost     Float    @map("chicken_cost")
+  sauceDaily      Float    @default(200.00) @map("sauce_daily")
+  seasoningDaily  Float    @default(200.00) @map("seasoning_daily")
+  totalCost       Float    @map("total_cost")
+  budgetBefore    Float?   @map("budget_before")
+  budgetAfter     Float?   @map("budget_after")
+  exceeded        Boolean  @default(false)
+  exceededBy      Float    @default(0) @map("exceeded_by")
+  createdAt       DateTime @default(now()) @map("created_at")
+  
+  // Relationships
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  @@map("costs")
+}
+
+// ============================================
+// TABLE 5: SUPPLIES
+// Sauce & Seasoning reorder tracking
+// ============================================
+model Supply {
+  id              Int      @id @default(autoincrement())
+  type            String
+  lastRefill      DateTime @map("last_refill")
+  costPerRefill   Float    @default(1400.00) @map("cost_per_refill")
+  refillFrequency Int      @default(7) @map("refill_frequency")
+  nextRefillDue   DateTime @map("next_refill_due")
+  status          String   @default("ok")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  @@map("supplies")
+}
