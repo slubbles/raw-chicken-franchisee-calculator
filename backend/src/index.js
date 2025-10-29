@@ -5,6 +5,10 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import prisma from './utils/prisma.js';
+import ordersRouter from './routes/orders.js';
+import budgetsRouter from './routes/budgets.js';
+import suppliesRouter from './routes/supplies.js';
+import dashboardRouter from './routes/dashboard.js';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -18,8 +22,9 @@ const PORT = process.env.PORT || 3000;
 // ============================================
 
 // Enable CORS (allows frontend to call this API)
+// Allow all origins for development (simplifies Codespaces usage)
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: true, // Allow all origins in development
   credentials: true
 }));
 
@@ -36,6 +41,21 @@ app.use((req, res, next) => {
 // ROUTES
 // ============================================
 
+// Mount API routes
+app.use('/api/orders', ordersRouter);
+app.use('/api/budgets', budgetsRouter);
+app.use('/api/supplies', suppliesRouter);
+app.use('/api/dashboard', dashboardRouter);
+
+// Health check endpoint (inside /api)
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'healthy', 
+    message: 'Backend is running',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Root endpoint (welcome page)
 app.get('/', (req, res) => {
   res.json({
@@ -46,10 +66,10 @@ app.get('/', (req, res) => {
       root: '/',
       health: '/health',
       api_info: '/api',
-      orders: '/api/orders (coming soon)',
-      budgets: '/api/budgets (coming soon)',
-      supplies: '/api/supplies (coming soon)',
-      dashboard: '/api/dashboard (coming soon)'
+      orders: '/api/orders',
+      budgets: '/api/budgets',
+      supplies: '/api/supplies',
+      dashboard: '/api/dashboard',
     },
     docs: 'Check /api for available endpoints'
   });
@@ -72,10 +92,10 @@ app.get('/api', (req, res) => {
     endpoints: {
       health: '/health',
       db_test: '/api/db-test',
-      orders: '/api/orders (coming soon)',
-      budgets: '/api/budgets (coming soon)',
-      supplies: '/api/supplies (coming soon)',
-      dashboard: '/api/dashboard (coming soon)'
+      orders: '/api/orders',
+      budgets: '/api/budgets',
+      supplies: '/api/supplies',
+      dashboard: '/api/dashboard/weekly',
     }
   });
 });
