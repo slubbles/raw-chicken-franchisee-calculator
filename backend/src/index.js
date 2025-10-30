@@ -22,9 +22,29 @@ const PORT = process.env.PORT || 3000;
 // ============================================
 
 // Enable CORS (allows frontend to call this API)
-// Allow all origins for development (simplifies Codespaces usage)
+// Production: Whitelist only the frontend domain
+// Development: Allow all origins for easier local dev
+const allowedOrigins = process.env.NODE_ENV === 'production'
+  ? [process.env.FRONTEND_URL]
+  : ['http://localhost:3000', 'http://127.0.0.1:3000'];
+
 app.use(cors({
-  origin: true, // Allow all origins in development
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, server-to-server)
+    if (!origin) return callback(null, true);
+    
+    if (process.env.NODE_ENV === 'production') {
+      // Production: Only allow whitelisted origins
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: Origin ${origin} not allowed`));
+      }
+    } else {
+      // Development: Allow all origins
+      callback(null, true);
+    }
+  },
   credentials: true
 }));
 
@@ -47,13 +67,49 @@ app.use('/api/budgets', budgetsRouter);
 app.use('/api/supplies', suppliesRouter);
 app.use('/api/dashboard', dashboardRouter);
 
-// Health check endpoint (inside /api)
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'healthy', 
-    message: 'Backend is running',
-    timestamp: new Date().toISOString()
-  });
+// API health check endpoint
+app.get('/api/health', async (req, res) => {
+  try {
+    // Test database connection
+    await prisma.$queryRaw`SELECT 1`;
+    
+    // Try to get database info (different syntax for PostgreSQL vs SQLite)
+    let dbInfo = 'connected';
+    try {
+      const version = await prisma.$queryRaw`SELECT current_setting('server_version') as version`;
+      dbInfo = version[0]?.version || 'PostgreSQL';
+    } catch {
+      dbInfo = 'Database connected (version unknown)';
+    }
+    
+    res.json({ 
+      status: 'healthy',
+      service: 'Franchise Reorder Calculator API',
+      message: 'Backend is running',
+      timestamp: new Date().toISOString(),
+      database: {
+        status: 'connected',
+        info: dbInfo
+      },
+      uptime: Math.round(process.uptime()) + 's',
+      memory: {
+        used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB',
+        total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + 'MB'
+      },
+      environment: process.env.NODE_ENV || 'development',
+      version: '1.0.0'
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: 'unhealthy',
+      service: 'Franchise Reorder Calculator API',
+      timestamp: new Date().toISOString(),
+      database: {
+        status: 'disconnected',
+        error: error.message
+      }
+    });
+  }
 });
 
 // Root endpoint (welcome page)
@@ -76,12 +132,29 @@ app.get('/', (req, res) => {
 });
 
 // Health check endpoint (test if server is running)
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    message: 'Franchise Reorder Calculator API is running!',
-    timestamp: new Date().toISOString()
-  });
+app.get('/health', async (req, res) => {
+  try {
+    // Test database connection
+    await prisma.$queryRaw`SELECT 1`;
+    
+    res.json({ 
+      status: 'ok',
+      service: 'Franchise Reorder Calculator API',
+      timestamp: new Date().toISOString(),
+      database: 'connected',
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV || 'development',
+      version: '1.0.0'
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: 'error',
+      service: 'Franchise Reorder Calculator API',
+      timestamp: new Date().toISOString(),
+      database: 'disconnected',
+      error: error.message
+    });
+  }
 });
 
 // API version info

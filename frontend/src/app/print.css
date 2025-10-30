@@ -1,0 +1,174 @@
+/* Print Stylesheet for Calamias Fried Chicken Calculator */
+
+@media print {
+  /* Reset colors for print */
+  * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Hide non-printable elements */
+  nav,
+  .no-print,
+  button,
+  .print-hide,
+  [data-print-hide],
+  input[type="search"],
+  .keyboard-shortcut,
+  footer {
+    display: none !important;
+  }
+
+  /* Page setup */
+  @page {
+    margin: 1.5cm;
+    size: A4;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+
+  /* Headers */
+  h1 {
+    font-size: 24pt;
+    margin-bottom: 12pt;
+    page-break-after: avoid;
+  }
+
+  h2 {
+    font-size: 18pt;
+    margin-top: 12pt;
+    margin-bottom: 8pt;
+    page-break-after: avoid;
+  }
+
+  h3 {
+    font-size: 14pt;
+    margin-top: 8pt;
+    margin-bottom: 6pt;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12pt 0;
+    page-break-inside: auto;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  th,
+  td {
+    border: 1px solid #000;
+    padding: 8pt;
+    text-align: left;
+  }
+
+  th {
+    font-weight: bold;
+    background-color: #f0f0f0 !important;
+  }
+
+  /* Cards */
+  .card {
+    border: 1px solid #000 !important;
+    margin-bottom: 12pt;
+    page-break-inside: avoid;
+  }
+
+  /* Links */
+  a {
+    text-decoration: underline;
+  }
+
+  a[href]:after {
+    content: " (" attr(href) ")";
+    font-size: 90%;
+  }
+
+  a[href^="#"]:after,
+  a[href^="javascript:"]:after {
+    content: "";
+  }
+
+  /* Charts and images */
+  img,
+  svg {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+
+  /* Print header */
+  .print-header {
+    display: block !important;
+    margin-bottom: 20pt;
+    border-bottom: 2px solid #000;
+    padding-bottom: 10pt;
+  }
+
+  .print-header h1 {
+    margin: 0;
+  }
+
+  .print-header .print-date {
+    font-size: 10pt;
+    color: #666 !important;
+  }
+
+  /* Avoid orphans and widows */
+  p,
+  h2,
+  h3 {
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Force page breaks */
+  .page-break-before {
+    page-break-before: always;
+  }
+
+  .page-break-after {
+    page-break-after: always;
+  }
+
+  /* Summary boxes */
+  .summary-box {
+    border: 2px solid #000 !important;
+    padding: 12pt;
+    margin: 12pt 0;
+    background: #f5f5f5 !important;
+  }
+
+  /* Badge/Tag styles */
+  .badge,
+  .tag {
+    border: 1px solid #000 !important;
+    padding: 2pt 6pt;
+    display: inline-block;
+  }
+
+  /* Grid layouts */
+  .grid {
+    display: block !important;
+  }
+
+  .grid > * {
+    width: 100% !important;
+    margin-bottom: 8pt;
+  }
+}
